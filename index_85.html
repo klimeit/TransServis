@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Транссервис - управление проектом | Климэйт</title>
+<style>
+  :root{
+    color-scheme: light;
+    --surface-1:#fcfcfb; --page:#f9f9f7;
+    --ink-1:#0b0b0b; --ink-2:#52514e; --ink-3:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --plan:#2a78d6; --plan-soft:#cde2fb;
+    --fact:#1baf7a; --fact-soft:#c9ede0;
+    --good:#0ca30c; --good-text:#006300;
+    --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+    --wknd:#f3f2ee;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --ink-1:#ffffff; --ink-2:#c3c2b7; --ink-3:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+    --plan:#3987e5; --plan-soft:#1c3a5e;
+    --fact:#199e70; --fact-soft:#14392c;
+    --good:#0ca30c; --good-text:#0ca30c;
+    --wknd:#212120;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--page); color:var(--ink-1); font-size:14px; line-height:1.45;}
+  .wrap{max-width:1240px; margin:0 auto; padding:0 20px 60px;}
+
+  header.top{display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px 0 12px;}
+  .brand{display:flex; flex-direction:column;}
+  .brand b{font-size:18px; letter-spacing:.2px;}
+  .brand span{color:var(--ink-3); font-size:12px;}
+  .top .spacer{flex:1;}
+  .pill{border:1px solid var(--ring); background:var(--surface-1); border-radius:999px; padding:6px 14px; font-size:12px; color:var(--ink-2);}
+  .pill b{color:var(--ink-1);}
+  button, select, input, textarea{font:inherit; color:inherit;}
+  .btn{cursor:pointer; border:1px solid var(--ring); background:var(--surface-1); border-radius:8px; padding:7px 14px; font-size:13px;}
+  .btn:hover{border-color:var(--ink-3);}
+  .btn.primary{background:var(--plan); border-color:var(--plan); color:#fff;}
+  .btn.small{padding:4px 10px; font-size:12px;}
+  .btn.danger{color:var(--crit); border-color:var(--crit);}
+
+  nav.tabs{display:flex; gap:4px; flex-wrap:wrap; border-bottom:1px solid var(--grid); margin-bottom:18px;}
+  nav.tabs button{background:none; border:none; border-bottom:2px solid transparent; padding:10px 14px; cursor:pointer; color:var(--ink-2); font-size:14px;}
+  nav.tabs button.active{color:var(--ink-1); border-bottom-color:var(--plan); font-weight:600;}
+  .tabpane{display:none;}
+  .tabpane.active{display:block;}
+
+  .banner{border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; gap:10px; align-items:flex-start; border:1px solid var(--ring); background:var(--surface-1);}
+  .banner .ico{font-size:16px; line-height:1.3;}
+  .banner.ok{border-left:4px solid var(--good);}
+  .banner.warn{border-left:4px solid var(--warn);}
+  .banner.crit{border-left:4px solid var(--crit);}
+  .banner b{display:block;}
+  .banner small{color:var(--ink-2);}
+
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;}
+  .kpi{background:var(--surface-1); border:1px solid var(--ring); border-radius:12px; padding:14px 16px;}
+  .kpi .lbl{font-size:12px; color:var(--ink-3); margin-bottom:4px;}
+  .kpi .val{font-size:22px; font-weight:650; letter-spacing:.2px;}
+  .kpi .sub{font-size:12px; color:var(--ink-2); margin-top:2px;}
+  .kpi .val.good{color:var(--good-text);}
+  .kpi .val.bad{color:var(--crit);}
+
+  .card{background:var(--surface-1); border:1px solid var(--ring); border-radius:12px; padding:16px 18px; margin-bottom:16px;}
+  .card h3{font-size:14px; font-weight:650; margin-bottom:10px;}
+  .card h3 small{color:var(--ink-3); font-weight:400;}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--ink-2); margin-bottom:8px; flex-wrap:wrap;}
+  .legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); font-weight:600; text-align:left; padding:8px 8px; border-bottom:1px solid var(--grid); white-space:nowrap;}
+  td{padding:7px 8px; border-bottom:1px solid var(--grid); vertical-align:top;}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  tr.section td{background:var(--wknd); font-weight:650;}
+  tr:hover td{background:color-mix(in srgb, var(--plan) 4%, transparent);}
+  .bar{height:6px; border-radius:3px; background:var(--grid); overflow:hidden; min-width:60px; margin-top:4px;}
+  .bar i{display:block; height:100%; border-radius:3px; background:var(--fact);}
+  .muted{color:var(--ink-3);}
+  .tag{display:inline-block; border-radius:6px; padding:1px 8px; font-size:11px; font-weight:600;}
+  .tag.ok{background:color-mix(in srgb, var(--good) 15%, transparent); color:var(--good-text);}
+  .tag.warn{background:color-mix(in srgb, var(--warn) 22%, transparent); color:#7a5200;}
+  .tag.crit{background:color-mix(in srgb, var(--crit) 15%, transparent); color:var(--crit);}
+  .tag.plan{background:var(--plan-soft); color:var(--plan);}
+  .tag.idle{background:var(--wknd); color:var(--ink-3);}
+
+  .formrow{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px;}
+  .field{display:flex; flex-direction:column; gap:3px;}
+  .field label{font-size:11px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.4px;}
+  .field input, .field select, .field textarea{border:1px solid var(--ring); background:var(--page); border-radius:8px; padding:7px 10px; font-size:13px; min-width:0;}
+  .field textarea{width:100%; resize:vertical;}
+  .lines .linerow{display:grid; grid-template-columns:1fr 110px 130px 36px; gap:8px; margin-bottom:6px; align-items:center;}
+  .lines .linerow .sum{text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:13px;}
+  .xbtn{border:none; background:none; color:var(--crit); cursor:pointer; font-size:16px;}
+
+  .logentry{border:1px solid var(--ring); border-radius:10px; padding:12px 14px; margin-bottom:10px; background:var(--page);}
+  .logentry .lhead{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px;}
+  .logentry .lhead b{font-size:14px;}
+  .logentry ul{margin:4px 0 4px 18px; font-size:13px;}
+  .logentry .lsum{font-size:13px; color:var(--ink-2);}
+
+  /* Gantt */
+  .gwrap{overflow-x:auto; padding-bottom:6px;}
+  .gantt{display:grid; font-size:11px; min-width:900px;}
+  .gantt .gname{position:sticky; left:0; background:var(--surface-1); padding:6px 10px 6px 0; border-bottom:1px solid var(--grid); white-space:nowrap; z-index:2; font-size:12px;}
+  .gantt .gcell{border-bottom:1px solid var(--grid); border-left:1px solid var(--grid); position:relative; min-height:28px;}
+  .gantt .gcell.wknd{background:var(--wknd);}
+  .gantt .gcell.today{box-shadow:inset 2px 0 0 var(--crit);}
+  .gantt .ghead{font-size:10px; color:var(--ink-3); text-align:center; padding:3px 1px; border-left:1px solid var(--grid); white-space:nowrap;}
+  .gbar{position:absolute; top:6px; bottom:6px; left:2px; right:2px; background:var(--plan-soft); border-radius:4px; overflow:hidden;}
+  .gbar i{display:block; height:100%; background:var(--plan); opacity:.85;}
+  .gbar.done i{background:var(--fact);}
+  .gstage-pct{font-size:11px; color:var(--ink-2); font-variant-numeric:tabular-nums;}
+
+  .tg-out{width:100%; min-height:260px; font-family:ui-monospace,Consolas,monospace; font-size:13px; border:1px solid var(--ring); border-radius:10px; padding:12px; background:var(--page); white-space:pre-wrap;}
+  .setgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
+  .note{font-size:12px; color:var(--ink-3); margin-top:6px;}
+  .footer-note{font-size:11px; color:var(--ink-3); margin-top:30px; border-top:1px solid var(--grid); padding-top:10px;}
+  .pill.sync-ok{border-color:var(--fact); color:var(--fact);}
+  .pill.sync-wait{border-color:var(--warn); color:#7a5200;}
+  .pill.sync-err{border-color:var(--crit); color:var(--crit);}
+  .pill.sync-off{color:var(--ink-3);}
+  .planbox{border:1px solid var(--plan); border-radius:10px; padding:12px 14px; margin-bottom:12px; background:color-mix(in srgb, var(--plan) 4%, transparent);}
+  .planhead{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; font-size:13px;}
+  .planhint{font-size:13px; color:var(--ink-3); padding:8px 0;}
+  table.pftable{width:100%; border-collapse:collapse; font-size:13px;}
+  table.pftable th{font-size:10.5px; padding:4px 6px;}
+  table.pftable td{padding:5px 6px; border-bottom:1px solid var(--grid); vertical-align:middle;}
+  table.pftable tr.off td{opacity:.45;}
+  table.pftable input[type=number]{border:1px solid var(--ring); background:var(--surface-1); border-radius:6px; padding:4px 6px; width:90px; text-align:right;}
+  table.pftable input[type=checkbox]{width:18px; height:18px; cursor:pointer; accent-color:var(--fact);}
+  .pfrow-note{font-size:11px; color:var(--ink-3);}
+  @media (max-width:700px){ .lines .linerow{grid-template-columns:1fr 80px 90px 30px;} .kpi .val{font-size:18px;} }
+  body.client-only nav.tabs, body.client-only .internal{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <b>ТРАНССЕРВИС - реконструкция системы кондиционирования</b>
+      <span>ООО "Климэйт" | Договор подряда № 04238/26 от 24.07.2026 | Пушкино, ТСТ-1, пом. 180 и 198</span>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" id="pillToday"></span>
+    <span class="pill internal" id="pillDeadline"></span>
+    <span class="pill sync-off" id="syncPill" title="Состояние командной синхронизации">Локальный режим</span>
+    <button class="btn small internal" id="syncBtn" title="Обновить данные команды">&#8635;</button>
+    <button class="btn small internal" id="themeBtn" title="Тема">◐</button>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="dash" class="active">Дашборд</button>
+    <button data-tab="daily">Боевой план</button>
+    <button data-tab="smeta">Смета план/факт</button>
+    <button data-tab="gantt">План-график</button>
+    <button data-tab="tg">Отчет в ТГ</button>
+    <button data-tab="set">Настройки</button>
+  </nav>
+
+  <div id="riskBanner" class="internal"></div>
+
+  <!-- DASHBOARD -->
+  <section class="tabpane active" id="tab-dash">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <h3>Выработка нарастающим итогом <small>план против факта, руб. (внутренние расценки производства)</small></h3>
+      <div class="legend">
+        <span><i style="background:var(--plan)"></i>План</span>
+        <span><i style="background:var(--fact)"></i>Факт</span>
+        <span><i style="background:var(--crit)"></i>Сегодня</span>
+      </div>
+      <div id="scurve"></div>
+    </div>
+    <div class="card">
+      <h3>Выработка по дням <small>факт, руб.</small></h3>
+      <div id="dailyChart"></div>
+    </div>
+    <div class="card">
+      <h3>Готовность по разделам сметы</h3>
+      <div id="sectionBars"></div>
+    </div>
+  </section>
+
+  <!-- DAILY -->
+  <section class="tabpane" id="tab-daily">
+    <div class="card">
+      <h3 id="entryFormTitle">Новая запись</h3>
+      <div class="formrow">
+        <div class="field"><label>Тип</label>
+          <select id="eType"><option value="fact">Факт за день</option><option value="plan">План на день</option></select>
+        </div>
+        <div class="field"><label>Дата</label><input type="date" id="eDate"></div>
+        <div class="field"><label>Людей на объекте (ч/д)</label><input type="number" id="eChd" min="0" step="0.5" style="width:110px"></div>
+      </div>
+      <div id="eFromPlan"></div>
+      <div class="lines" id="eLines"></div>
+      <div class="formrow">
+        <button class="btn small" id="addLineBtn">+ позиция из сметы</button>
+        <span class="muted" id="eTotal"></span>
+      </div>
+      <div class="field" style="margin-bottom:10px"><label>Комментарий (проблемы, простои, доступ и т.д.)</label><textarea id="eNote" rows="2"></textarea></div>
+      <button class="btn primary" id="saveEntryBtn">Сохранить запись</button>
+      <button class="btn" id="cancelEditBtn" style="display:none">Отменить</button>
+    </div>
+    <div class="card">
+      <h3>Смета - план на день <small>гл. инженер: впишите объемы на следующий день и сформируйте задачу для ТГ</small></h3>
+      <div class="formrow">
+        <div class="field"><label>Дата плана</label><input type="date" id="bpDate"></div>
+        <div class="field"><label>Людей на объекте (ч/д)</label><input type="number" id="bpChd" min="0" step="0.5" style="width:110px"></div>
+        <div class="field" style="flex:1;min-width:200px"><label>Комментарий к плану</label><input type="text" id="bpNote" placeholder="доступ, техника, особенности"></div>
+      </div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--grid);border-radius:8px">
+        <table id="bpTable"></table>
+      </div>
+      <div class="formrow" style="margin-top:10px">
+        <button class="btn primary" id="bpFormBtn">Сформировать план</button>
+        <button class="btn" id="bpCopyBtn" style="display:none">Скопировать текст для ТГ</button>
+        <span class="muted" id="bpTotal"></span>
+      </div>
+      <textarea class="tg-out" id="bpOut" style="display:none;margin-top:10px"></textarea>
+      <p class="note">Кнопка сохраняет план в журнал (если ч/д не указаны - подставится средний план по внутреннему графику) и выдает готовый текст задачи для рабочего чата ТГ.</p>
+    </div>
+    <div class="card">
+      <h3>Журнал</h3>
+      <div id="logList"></div>
+    </div>
+  </section>
+
+  <!-- SMETA -->
+  <section class="tabpane" id="tab-smeta">
+    <div class="card">
+      <h3>Спецификация производства <small>расценки выработки, план/факт по позициям</small></h3>
+      <div style="overflow-x:auto"><table id="smetaTable"></table></div>
+      <p class="note">Факт по позициям набирается из записей журнала (вкладка "Боевой план"). Расценки - внутренние расценки выработки производства, не клиентские цены договора.</p>
+    </div>
+  </section>
+
+  <!-- GANTT internal -->
+  <section class="tabpane" id="tab-gantt">
+    <div class="card">
+      <div class="formrow" style="justify-content:space-between">
+        <h3 style="margin:0">План-график работ <small>внутренний, с прогрессом</small></h3>
+        <div class="formrow" style="margin:0">
+          <div class="field"><label>Масштаб</label>
+            <select id="gScale"><option value="day">По дням</option><option value="week" selected>По неделям</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="gwrap" id="ganttInt"></div>
+      <div class="legend" style="margin-top:8px">
+        <span><i style="background:var(--plan)"></i>План этапа</span>
+        <span><i style="background:var(--fact)"></i>Выполнено</span>
+        <span><i style="background:var(--wknd); border:1px solid var(--grid)"></i>Выходной</span>
+        <span><i style="background:var(--crit)"></i>Линия сегодня</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Прогресс этапов <small>% вводится вручную или подтягивается из связанных позиций сметы</small></h3>
+      <table id="stageTable"></table>
+    </div>
+  </section>
+
+  <!-- TG -->
+  <section class="tabpane" id="tab-tg">
+    <div class="card">
+      <h3>Генератор сообщений для Telegram</h3>
+      <div class="formrow">
+        <div class="field"><label>Шаблон</label>
+          <select id="tgKind">
+            <option value="planCrew">План на день - бригаде</option>
+            <option value="factInt">Итог дня - внутренний отчет</option>
+            <option value="clientWeek">Статус для клиента</option>
+          </select>
+        </div>
+        <div class="field"><label>Дата</label><input type="date" id="tgDate"></div>
+        <button class="btn primary" id="tgGen">Сформировать</button>
+        <button class="btn" id="tgCopy">Скопировать</button>
+      </div>
+      <textarea class="tg-out" id="tgOut" placeholder="Здесь появится готовый текст..."></textarea>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="tabpane" id="tab-set">
+    <div class="card">
+      <h3>Параметры проекта</h3>
+      <div class="setgrid">
+        <div class="field"><label>Дата получения аванса (старт 90 к.д.)</label><input type="date" id="sAdvance"></div>
+        <div class="field"><label>Дата начала работ по ППР (отсчет выработки)</label><input type="date" id="sWorkStart"></div>
+        <div class="field"><label>Внутренний срок, к.д. (с даты начала работ)</label><input type="number" id="sIntDays"></div>
+        <div class="field"><label>Срок для клиентского сайта, к.д. (договор)</label><input type="number" id="sDays"></div>
+        <div class="field"><label>Плановых рабочих дней</label><input type="number" id="sWorkDays"></div>
+        <div class="field"><label>План выработки всего, руб.</label><input type="number" id="sTotal"></div>
+        <div class="field"><label>План человеко-дней</label><input type="number" id="sChd"></div>
+      </div>
+      <p class="note">Производство работает по внутреннему плану: срок и отклонения в панели считаются от даты начала работ и внутреннего срока. Дата аванса и договорной срок используются только для выгрузки клиентского сайта и в панели не отображаются.</p>
+      <button class="btn primary" id="saveSet" style="margin-top:10px">Сохранить параметры</button>
+    </div>
+    <div class="card">
+      <h3>Этапы план-графика</h3>
+      <table id="stageEdit"></table>
+      <p class="note">Даты правятся здесь, прогресс - на вкладке "План-график".</p>
+    </div>
+    <div class="card">
+      <h3>Командная синхронизация <small>общие данные для всех сотрудников</small></h3>
+      <div class="setgrid">
+        <div class="field" style="grid-column:1/-1"><label>Адрес веб-приложения Google (Apps Script)</label><input type="text" id="sSyncUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="field"><label>Ключ доступа</label><input type="text" id="sSyncKey" placeholder="klimek-2026"></div>
+        <div class="field"><label>Ваше имя (автор записей)</label><input type="text" id="sUserName" placeholder="Иванов И."></div>
+      </div>
+      <div class="formrow" style="margin-top:10px">
+        <button class="btn primary" id="syncSaveBtn">Сохранить и подключиться</button>
+        <button class="btn" id="syncPullBtn">Загрузить с сервера</button>
+        <button class="btn" id="syncPushBtn">Отправить на сервер</button>
+        <span class="muted" id="syncInfo"></span>
+      </div>
+      <p class="note">Настройки подключения хранятся на каждом устройстве отдельно, рабочие данные - общие. Панель забирает изменения при открытии страницы, при возврате на вкладку и по кнопке обновления в шапке. Порядок настройки - в файле ИНСТРУКЦИЯ.md.</p>
+    </div>
+    <div class="card">
+      <h3>Данные</h3>
+      <div class="formrow">
+        <button class="btn" id="expBtn">Экспорт JSON (резервная копия)</button>
+        <button class="btn primary" id="expClientBtn">Выгрузить данные для клиентского сайта</button>
+        <label class="btn" style="display:inline-block">Импорт JSON<input type="file" id="impFile" accept=".json" style="display:none"></label>
+        <button class="btn danger" id="wipeBtn">Стереть все данные</button>
+      </div>
+      <p class="note">Кнопка "Выгрузить данные для клиентского сайта" скачивает файл client-data.js - замените им одноименный файл в репозитории GitHub, и клиентский сайт покажет актуальный прогресс. Данные хранятся в браузере на этом устройстве. Для переноса или совместной работы - выгружайте JSON и импортируйте на другом устройстве. Делайте экспорт после каждого дня заполнения.</p>
+    </div>
+  </section>
+
+  <div class="footer-note">Транссервис ERP | ООО "Климэйт" | Договор № 04238/26 от 24.07.2026 | Внутренний инструмент управления проектом. Суммы выработки - внутренние расценки производства.</div>
+</div>
+<script>
+/* ==== Данные проекта (из рабочей таблицы производства и договора) ==== */
+const CONTRACT = {
+  number:"04238/26", signed:"2026-07-24",
+  sum: 8799353.44, advance: 5603624.44, final: 3195729.00,
+  days: 90
+};
+const SPEC = [
+ {sec:"1. Материалы - трубопровод и комплектующие", items:[
+  {id:"1.1", n:"Муфта PP-R комбинированная разъемная 63х2\" VALFEX", u:"шт", q:12, p:2500},
+  {id:"1.2", n:"Кран шаровой PP-R 63 внутренняя пайка VALFEX", u:"шт", q:12, p:2500},
+  {id:"1.3", n:"Труба PP-RGF армированная 63х8,6 (Ростурпласт)", u:"м", q:20, p:3000},
+  {id:"1.4", n:"Труба PP-R армированная 50х6,9 VALFEX", u:"м", q:20, p:2900},
+  {id:"1.5", n:"Труба PP-R армированная 32х5,4 VALFEX", u:"м", q:170, p:2800},
+  {id:"1.6", n:"Труба PP-R армированная 25х4,2 VALFEX", u:"м", q:30, p:2500},
+  {id:"1.7", n:"Фитинги ППР (отводы, тройники, муфты)", u:"компл", q:1, p:80000}]},
+ {sec:"2. Теплоизоляция, дренаж", items:[
+  {id:"2.1", n:"Рулон теплоизоляции 13х1000х14 СТ (14 м2)", u:"м2", q:14, p:4000},
+  {id:"2.4", n:"Теплоизоляция каучук 25х09", u:"м", q:30, p:350},
+  {id:"2.5", n:"Теплоизоляция каучук 35х09", u:"м", q:170, p:500},
+  {id:"2.6", n:"Теплоизоляция каучук 54х09", u:"м", q:20, p:550},
+  {id:"2.7", n:"Теплоизоляция каучук 64х09", u:"м", q:20, p:600},
+  {id:"2.8", n:"Демпфирующая лента каучук 3х50-15", u:"шт", q:60, p:2500},
+  {id:"2.9", n:"Труба напорная ПВХ 25х1,9 PN16", u:"м", q:30, p:900},
+  {id:"2.10", n:"Отвод 90 ПВХ d25", u:"шт", q:30, p:70},
+  {id:"2.11", n:"Тройник 90 ПВХ d25", u:"шт", q:10, p:80}]},
+ {sec:"3. Смесительные узлы фанкойлов (материалы)", items:[
+  {id:"3.1", n:"Воздухоотводчик автоматический Ду15", u:"шт", q:10, p:0},
+  {id:"3.3", n:"Муфта разъемная 25х3/4\"", u:"шт", q:30, p:0},
+  {id:"3.5", n:"Кран шаровой PP-R 25", u:"шт", q:20, p:0},
+  {id:"3.6", n:"Фильтр сетчатый 25х45", u:"шт", q:20, p:0},
+  {id:"3.11", n:"Клапан балансировочный Ду20", u:"шт", q:10, p:0}]},
+ {sec:"4. Электропродукция", items:[
+  {id:"4.1", n:"Кабель ВВГнг LS 5х1,5", u:"м", q:300, p:850},
+  {id:"4.2", n:"Кабель ВВГнг LS 3х2,5", u:"м", q:50, p:650},
+  {id:"4.3", n:"Гофра 20 мм", u:"м", q:350, p:150},
+  {id:"4.4", n:"Электропродукция прочая (комплект)", u:"компл", q:1, p:50000}]},
+ {sec:"5. Комплектующие", items:[
+  {id:"5.1", n:"Помпа накопительная", u:"шт", q:10, p:20000},
+  {id:"5.3", n:"Автоматы для фанкойлов", u:"шт", q:10, p:7000}]},
+ {sec:"6. Монтаж узлов и оборудования", items:[
+  {id:"6.1", n:"Сборка и монтаж смесительного узла", u:"шт", q:10, p:52000},
+  {id:"6.2", n:"Монтаж фанкойла", u:"шт", q:10, p:106900},
+  {id:"6.3", n:"Такелажные работы", u:"компл", q:1, p:165000},
+  {id:"6.4", n:"Опрессовка системы, проверка герметичности", u:"контур", q:1, p:80000},
+  {id:"6.5", n:"Окраска трубопровода", u:"компл", q:1, p:50000},
+  {id:"6.6", n:"Демонтажные работы", u:"компл", q:1, p:250000},
+  {id:"6.7", n:"Сварочные работы, монтаж мет. трубопровода", u:"компл", q:1, p:570000},
+  {id:"6.8", n:"Техника (доставка материалов и оборудования)", u:"компл", q:1, p:112500},
+  {id:"6.9", n:"Промывка системы (вода)", u:"сист", q:1, p:70000},
+  {id:"6.10", n:"Пуско-наладочные работы, балансировка", u:"компл", q:1, p:250000},
+  {id:"6.11", n:"Исполнительная документация", u:"компл", q:1, p:164000},
+  {id:"6.12", n:"Накладные расходы", u:"компл", q:1, p:50000},
+  {id:"7.2", n:"Пульт управления фанкойлами (монтаж)", u:"шт", q:10, p:6500}]}
+];
+const DEFAULT_STAGES = [
+ {id:"st0", n:"Подготовительные работы, пропуски, снабжение", s:"2026-07-27", e:"2026-07-31", pr:90},
+ {id:"st1", n:"Демонтажные работы", s:"2026-08-03", e:"2026-08-06", pr:0},
+ {id:"st2", n:"Монтаж внутренних блоков", s:"2026-08-07", e:"2026-08-13", pr:0},
+ {id:"st3", n:"Монтаж полипропиленовой трассы", s:"2026-08-14", e:"2026-09-04", pr:0},
+ {id:"st4", n:"Сборка и монтаж смесительных узлов", s:"2026-08-14", e:"2026-08-21", pr:0},
+ {id:"st5", n:"Электромонтажные работы", s:"2026-08-24", e:"2026-09-04", pr:0},
+ {id:"st6", n:"Сварочные работы", s:"2026-08-31", e:"2026-09-03", pr:0},
+ {id:"st7", n:"Промывка, опрессовка", s:"2026-09-07", e:"2026-09-09", pr:0},
+ {id:"st8", n:"Монтаж дренажа", s:"2026-09-07", e:"2026-09-15", pr:0},
+ {id:"st9", n:"ПНР", s:"2026-09-16", e:"2026-09-24", pr:0},
+ {id:"st10", n:"Исполнительная документация, сдача", s:"2026-09-16", e:"2026-09-24", pr:0}
+];
+/* План ч/д по внутреннему ППР: дата -> плановые человеко-дни (сумма по всем работам) */
+const PPR_DAY = {
+ "2026-08-03":4,"2026-08-04":4,"2026-08-05":4,"2026-08-06":4,"2026-08-07":4,
+ "2026-08-10":4,"2026-08-11":4,"2026-08-12":4,"2026-08-13":4,
+ "2026-08-14":4,"2026-08-17":4,"2026-08-18":4,"2026-08-19":4,"2026-08-20":4,"2026-08-21":4,
+ "2026-08-24":4,"2026-08-25":4,"2026-08-26":4,"2026-08-27":4,"2026-08-28":4,
+ "2026-08-31":6,"2026-09-01":6,"2026-09-02":6,"2026-09-03":6,"2026-09-04":4,
+ "2026-09-07":4,"2026-09-08":4,"2026-09-09":4,
+ "2026-09-10":4,"2026-09-11":4,"2026-09-14":4,"2026-09-15":4,
+ "2026-09-16":2,"2026-09-17":2,"2026-09-18":2,"2026-09-21":2,"2026-09-22":2,"2026-09-23":2,"2026-09-24":2
+};
+const PPR_END = "2026-09-24";
+</script>
+<script>
+"use strict";
+/* ==== утилиты ==== */
+const $ = s => document.querySelector(s);
+const fmt = n => (Math.round(n)).toLocaleString('ru-RU');
+const fmtQ = n => { n=Number(n)||0; return (Math.abs(n-Math.round(n))<1e-9 ? Math.round(n) : Math.round(n*100)/100).toLocaleString('ru-RU'); };
+const fmtR = n => fmt(n) + ' р.';
+const pct = (a,b) => b>0 ? (100*a/b) : 0;
+const d2s = d => d.toISOString().slice(0,10);
+const s2d = s => new Date(s+'T00:00:00');
+const dShort = s => { const d=s2d(s); return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0'); };
+const dLong = s => { const d=s2d(s); return dShort(s)+'.'+d.getFullYear(); };
+const isWknd = d => d.getDay()===0 || d.getDay()===6;
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const todayStr = () => d2s(new Date());
+const LOG = () => state.log.filter(e=>!e.deleted);
+const ITEMS = {}; SPEC.forEach(sec => sec.items.forEach(it => { it.sum = it.q*it.p; ITEMS[it.id]=it; }));
+
+/* ==== состояние ==== */
+const DEFAULTS = {
+  settings:{ advance:"2026-07-27", workStart:"2026-08-03", days:90, internalDays:53, workDays:39, totalPlan:5238900, totalChd:84 },
+  stages: JSON.parse(JSON.stringify(DEFAULT_STAGES)),
+  log: []
+};
+let state;
+const store = {
+  get(){ try{ return localStorage.getItem('ts_erp_v3'); }catch(e){ return null; } },
+  getOld(){ try{ return localStorage.getItem('ts_erp_v2'); }catch(e){ return null; } },
+  set(v){ try{ localStorage.setItem('ts_erp_v3', v); }catch(e){} }
+};
+function load(){
+  const raw = store.get();
+  if(raw){ try{
+    const saved = JSON.parse(raw);
+    state = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS)), saved);
+    state.settings = Object.assign({}, DEFAULTS.settings, saved.settings||{});
+    return;
+  }catch(e){} }
+  state = JSON.parse(JSON.stringify(DEFAULTS));
+  /* миграция: журнал и прогресс из прошлой версии переносим, план-настройки берем новые */
+  const rawOld = store.getOld();
+  if(rawOld){ try{
+    const o = JSON.parse(rawOld);
+    if(Array.isArray(o.log)) state.log = o.log;
+    if(Array.isArray(o.stages) && o.stages.length) state.stages.forEach(s=>{ const m=o.stages.find(x=>x.n===s.n); if(m) s.pr=Number(m.pr||0); });
+    save();
+  }catch(e){} }
+}
+function saveLocal(){ store.set(JSON.stringify(state)); }
+function save(){ state.updatedAt=Date.now(); saveLocal(); SYNC.schedule(); }
+
+/* ==== расчеты ==== */
+function factByItem(){
+  const m = {};
+  LOG().filter(e=>e.type==='fact').forEach(e=> e.lines.forEach(l=>{ m[l.id]=(m[l.id]||0)+Number(l.q||0); }));
+  return m;
+}
+function entrySum(e){ return e.lines.reduce((s,l)=> s + (ITEMS[l.id]? ITEMS[l.id].p*Number(l.q||0):0), 0); }
+function factTotal(){ return LOG().filter(e=>e.type==='fact').reduce((s,e)=>s+entrySum(e),0); }
+function factChd(){ return LOG().filter(e=>e.type==='fact').reduce((s,e)=>s+Number(e.chd||0),0); }
+function workdaysBetween(a,b){ let n=0, d=new Date(a); while(d<=b){ if(!isWknd(d)) n++; d=addDays(d,1);} return n; }
+function metrics(){
+  const st = state.settings;
+  const start = s2d(st.advance);
+  const deadline = addDays(start, st.days-1);
+  const now = new Date(); now.setHours(0,0,0,0);
+  const ws = s2d(st.workStart || st.advance);
+  const intDeadline = addDays(ws, (st.internalDays||53)-1);
+  const clipped = now > intDeadline ? intDeadline : now;
+  const elapsedCal = Math.max(0, Math.round((now-ws)/864e5)+1);
+  const leftCal = Math.max(0, Math.round((intDeadline-now)/864e5));
+  const toStart = Math.max(0, Math.round((ws-now)/864e5));
+  const elapsedWd = now < ws ? 0 : workdaysBetween(ws, clipped);
+  const dayPlan = st.totalPlan / st.workDays;
+  const planToDate = Math.min(st.totalPlan, dayPlan*elapsedWd);
+  const fact = factTotal();
+  const dev = fact - planToDate;
+  const devPct = planToDate>0 ? 100*dev/planToDate : 0;
+  const rate = elapsedWd>0 ? fact/elapsedWd : 0;
+  let forecast = null;
+  if(rate>0 && fact < st.totalPlan){
+    const wdLeft = Math.ceil((st.totalPlan-fact)/rate);
+    let d=new Date(now), n=0;
+    while(n<wdLeft){ d=addDays(d,1); if(!isWknd(d)) n++; }
+    forecast = d;
+  } else if (fact >= st.totalPlan){ forecast = now; }
+  const chdPlanTotal = st.totalChd;
+  const chdPlanToDate = Math.min(chdPlanTotal, st.totalChd/st.workDays*elapsedWd);
+  return {start, ws, deadline, intDeadline, now, elapsedCal, leftCal, toStart, elapsedWd, dayPlan, planToDate, fact, dev, devPct, rate, forecast, chdPlanToDate, chdPlanTotal, chdFact: factChd(), pprEnd: s2d(PPR_END)};
+}
+function riskLevel(m){
+  if(m.fact >= m.planToDate) return 'ok';
+  const lag = (m.planToDate-m.fact)/Math.max(m.planToDate,1)*100;
+  if(lag >= 20) return 'crit';
+  if(lag >= 10) return 'warn';
+  return 'ok';
+}
+function stageStatus(sg, m){
+  const s=s2d(sg.s), e=s2d(sg.e), now=m.now, pr=Number(sg.pr||0);
+  if(pr>=100) return {t:'Выполнен', c:'ok'};
+  if(now < s) return {t:'Ожидает', c:'idle'};
+  if(now > e) return {t:'Просрочен', c:'crit'};
+  const expect = 100*workdaysBetween(s, now)/Math.max(workdaysBetween(s,e),1);
+  if(pr + 15 < expect) return {t:'Отставание', c:'warn'};
+  return {t:'В работе', c:'plan'};
+}
+
+/* ==== рендер: шапка и баннер ==== */
+function renderTop(){
+  const m = metrics();
+  if(m.now < m.ws){
+    $('#pillToday').innerHTML = 'Сегодня: <b>'+dLong(todayStr())+'</b> | до старта работ <b>'+m.toStart+'</b> дн.';
+  } else {
+    $('#pillToday').innerHTML = 'Сегодня: <b>'+dLong(todayStr())+'</b> | день <b>'+m.elapsedCal+'</b> из '+(state.settings.internalDays||53);
+  }
+  $('#pillDeadline').innerHTML = 'Финиш по внутреннему плану: <b>'+dLong(d2s(m.intDeadline))+'</b> | осталось <b>'+m.leftCal+'</b> к.д.';
+  const rl = riskLevel(m);
+  const lagPct = m.planToDate>0 ? ((m.planToDate-m.fact)/m.planToDate*100) : 0;
+  let html='';
+  if(rl==='crit'){
+    html = '<div class="banner crit"><span class="ico">&#9888;</span><div><b>Критическое отставание: '+lagPct.toFixed(1)+'% от плана выработки</b>'+
+    '<small>При отставании от графика более чем на 20% заказчик вправе отказаться от договора с возмещением убытков до 10% от его стоимости (п. 4.2.4). Требуется усиление бригады или пересогласование графика письмом.</small></div></div>';
+  } else if(rl==='warn'){
+    html = '<div class="banner warn"><span class="ico">&#9888;</span><div><b>Отставание от плана выработки: '+lagPct.toFixed(1)+'%</b>'+
+    '<small>Порог риска по договору - 20% (п. 4.2.4). Проверьте план на завтра и состав бригады.</small></div></div>';
+  } else if(m.fact>0){
+    html = '<div class="banner ok"><span class="ico">&#10003;</span><div><b>Идем в графике</b><small>Факт выработки не отстает от плана на текущую дату.</small></div></div>';
+  }
+  $('#riskBanner').innerHTML = html;
+}
+
+/* ==== рендер: дашборд ==== */
+function kpi(lbl,val,sub,cls){ return '<div class="kpi"><div class="lbl">'+lbl+'</div><div class="val '+(cls||'')+'">'+val+'</div>'+(sub?'<div class="sub">'+sub+'</div>':'')+'</div>'; }
+function renderDash(){
+  const m = metrics(), st=state.settings;
+  const devCls = m.dev>=0?'good':'bad';
+  const fcTxt = m.forecast ? dLong(d2s(m.forecast)) : 'нет данных';
+  const fcLate = m.forecast && m.forecast > m.intDeadline;
+  $('#kpis').innerHTML =
+    kpi('План выработки всего', fmtR(st.totalPlan), fmtR(m.dayPlan)+'/день | '+(state.settings.internalDays||53)+' к.д. с '+dShort(d2s(m.ws))) +
+    kpi('План на сегодня', fmtR(m.planToDate), m.elapsedWd+' раб. дней с начала работ ('+dShort(d2s(m.ws))+')') +
+    kpi('Факт на сегодня', fmtR(m.fact), pct(m.fact,st.totalPlan).toFixed(1)+'% контракта') +
+    kpi('Отклонение', (m.dev>=0?'+':'')+fmtR(m.dev), m.devPct.toFixed(1)+'% к плану на дату', devCls) +
+    kpi('Темп факт', fmtR(m.rate)+'/день', 'нужно: '+fmtR(m.dayPlan)+'/день') +
+    kpi('Прогноз завершения', fcTxt, fcLate ? 'позже внутреннего срока!' : 'внутренний срок: '+dLong(d2s(m.intDeadline)), fcLate?'bad':'') +
+    kpi('Человеко-дни', fmtQ(m.chdFact)+' / '+fmtQ(m.chdPlanTotal), 'план на дату: '+fmtQ(m.chdPlanToDate)) +
+    kpi('Выработка на 1 ч/д', m.chdFact>0? fmtR(m.fact/m.chdFact) : '-', 'норматив: '+fmtR(state.settings.totalPlan/state.settings.totalChd)+'/ч.д.');
+  renderSCurve(m); renderDailyChart(m); renderSectionBars();
+}
+function renderSCurve(m){
+  const st=state.settings, W=1100, H=280, P={l:70,r:16,t:14,b:26};
+  const start=m.start, end=addDays(start, st.days-1);
+  const days=[]; for(let d=new Date(start); d<=end; d=addDays(d,1)) days.push(new Date(d));
+  const dayPlan=m.dayPlan; let acc=0;
+  const planPts = days.map(d=>{ if(!isWknd(d) && d>=m.ws) acc+=dayPlan; return Math.min(acc,st.totalPlan); });
+  const byDate={}; LOG().filter(e=>e.type==='fact').forEach(e=>{ byDate[e.date]=(byDate[e.date]||0)+entrySum(e); });
+  let fa=0; const factPts=[]; const today=m.now;
+  days.forEach(d=>{ const k=d2s(d); if(byDate[k]) fa+=byDate[k]; factPts.push(d<=today? fa : null); });
+  const maxY=st.totalPlan*1.05;
+  const x=i=>P.l+(W-P.l-P.r)*i/(days.length-1);
+  const y=v=>H-P.b-(H-P.t-P.b)*v/maxY;
+  let grid='', lbls='';
+  for(let g=0; g<=4; g++){ const v=maxY*g/4, yy=y(v);
+    grid+='<line x1="'+P.l+'" y1="'+yy+'" x2="'+(W-P.r)+'" y2="'+yy+'" stroke="var(--grid)" stroke-width="1"/>';
+    lbls+='<text x="'+(P.l-8)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="var(--ink-3)">'+(v/1e6).toFixed(1).replace('.',',')+' млн</text>';
+  }
+  let xl='';
+  days.forEach((d,i)=>{ if(d.getDate()===1 || i===0){ xl+='<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--ink-3)">'+dShort(d2s(d))+'</text>'; }});
+  const path=pts=>pts.map((v,i)=> v===null?null:(i===0||pts[i-1]===null?'M':'L')+x(i).toFixed(1)+' '+y(v).toFixed(1)).filter(Boolean).join(' ');
+  const ti=days.findIndex(d=>d2s(d)===d2s(today));
+  const tline = ti>=0 ? '<line x1="'+x(ti)+'" y1="'+P.t+'" x2="'+x(ti)+'" y2="'+(H-P.b)+'" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>' : '';
+  const lastFact = factPts.filter(v=>v!==null).pop();
+  const fdot = (ti>=0 && lastFact!=null) ? '<circle cx="'+x(ti)+'" cy="'+y(lastFact)+'" r="4" fill="var(--fact)" stroke="var(--surface-1)" stroke-width="2"/>' : '';
+  $('#scurve').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+lbls+xl+
+    '<path d="'+path(planPts)+'" fill="none" stroke="var(--plan)" stroke-width="2"/>'+
+    '<path d="'+path(factPts)+'" fill="none" stroke="var(--fact)" stroke-width="2.5"/>'+ tline + fdot +'</svg>';
+}
+function renderDailyChart(m){
+  const byDate={}; LOG().filter(e=>e.type==='fact').forEach(e=>{ byDate[e.date]=(byDate[e.date]||0)+entrySum(e); });
+  const keys=Object.keys(byDate).sort();
+  if(!keys.length){ $('#dailyChart').innerHTML='<p class="muted">Пока нет фактических записей. Внесите первый факт на вкладке "Боевой план".</p>'; return; }
+  const W=1100, H=200, P={l:70,r:16,t:10,b:26};
+  const maxV=Math.max(...keys.map(k=>byDate[k]), m.dayPlan)*1.15;
+  const bw=Math.min(46,(W-P.l-P.r)/keys.length-6);
+  const y=v=>H-P.b-(H-P.t-P.b)*v/maxV;
+  let bars='';
+  keys.forEach((k,i)=>{ const xx=P.l+ i*((W-P.l-P.r)/keys.length)+3; const v=byDate[k];
+    bars+='<rect x="'+xx+'" y="'+y(v)+'" width="'+bw+'" height="'+(H-P.b-y(v))+'" rx="4" fill="var(--fact)"><title>'+dShort(k)+': '+fmtR(v)+'</title></rect>';
+    bars+='<text x="'+(xx+bw/2)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--ink-3)">'+dShort(k)+'</text>';
+    bars+='<text x="'+(xx+bw/2)+'" y="'+(y(v)-5)+'" text-anchor="middle" font-size="10" fill="var(--ink-2)">'+(v/1000).toFixed(0)+'т</text>';
+  });
+  const py=y(m.dayPlan);
+  $('#dailyChart').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+
+    '<line x1="'+P.l+'" y1="'+py+'" x2="'+(W-P.r)+'" y2="'+py+'" stroke="var(--plan)" stroke-width="1.5" stroke-dasharray="5 4"/>'+
+    '<text x="'+(W-P.r)+'" y="'+(py-5)+'" text-anchor="end" font-size="11" fill="var(--plan)">план/день '+fmtR(m.dayPlan)+'</text>'+bars+'</svg>';
+}
+function renderSectionBars(){
+  const fm=factByItem(); let html='';
+  SPEC.forEach(sec=>{
+    const plan=sec.items.reduce((s,i)=>s+i.sum,0);
+    const fact=sec.items.reduce((s,i)=>s+(fm[i.id]||0)*i.p,0);
+    const p=plan>0?Math.min(100,pct(fact,plan)):0;
+    html+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>'+sec.sec+'</span><span class="muted">'+fmtR(fact)+' / '+fmtR(plan)+' ('+p.toFixed(0)+'%)</span></div><div class="bar"><i style="width:'+p+'%"></i></div></div>';
+  });
+  $('#sectionBars').innerHTML=html;
+}
+
+/* ==== рендер: смета ==== */
+function renderSmeta(){
+  const fm=factByItem();
+  let html='<tr><th>№</th><th>Наименование</th><th>Ед.</th><th class="num">План кол-во</th><th class="num">Расценка</th><th class="num">План сумма</th><th class="num">Факт кол-во</th><th class="num">Факт сумма</th><th class="num">%</th></tr>';
+  let gp=0, gf=0;
+  SPEC.forEach(sec=>{
+    const plan=sec.items.reduce((s,i)=>s+i.sum,0);
+    const fact=sec.items.reduce((s,i)=>s+(fm[i.id]||0)*i.p,0);
+    gp+=plan; gf+=fact;
+    html+='<tr class="section"><td colspan="5">'+sec.sec+'</td><td class="num">'+fmtR(plan)+'</td><td></td><td class="num">'+fmtR(fact)+'</td><td class="num">'+(plan>0?pct(fact,plan).toFixed(0)+'%':'-')+'</td></tr>';
+    sec.items.forEach(it=>{
+      const fq=fm[it.id]||0, fs=fq*it.p, p=it.sum>0?Math.min(100,pct(fs,it.sum)):0;
+      const over = fq>it.q ? ' style="color:var(--crit);font-weight:600"' : '';
+      html+='<tr><td class="muted">'+it.id+'</td><td>'+it.n+'</td><td>'+it.u+'</td><td class="num">'+fmt(it.q)+'</td><td class="num">'+fmtR(it.p)+'</td><td class="num">'+fmtR(it.sum)+'</td><td class="num"'+over+'>'+fmt(fq)+'</td><td class="num">'+fmtR(fs)+'</td><td class="num">'+(it.sum>0?p.toFixed(0)+'%':'-')+'</td></tr>';
+    });
+  });
+  html+='<tr class="section"><td colspan="5">ИТОГО</td><td class="num">'+fmtR(gp)+'</td><td></td><td class="num">'+fmtR(gf)+'</td><td class="num">'+pct(gf,gp).toFixed(1)+'%</td></tr>';
+  $('#smetaTable').innerHTML=html;
+}
+
+/* ==== рендер: гантт ==== */
+function ganttHTML(scale, clientMode){
+  const m=metrics();
+  const all=state.stages;
+  const minD=s2d(all.reduce((a,b)=>a.s<b.s?a:b).s), maxD=s2d(all.reduce((a,b)=>a.e>b.e?a:b).e);
+  const cols=[];
+  if(scale==='day'){ for(let d=new Date(minD); d<=maxD; d=addDays(d,1)) cols.push({s:new Date(d), e:new Date(d), lbl:String(d.getDate()).padStart(2,'0'), sub:d.getMonth()}); }
+  else { let d=new Date(minD); d=addDays(d,-((d.getDay()+6)%7)); while(d<=maxD){ cols.push({s:new Date(d), e:addDays(d,6), lbl:dShort(d2s(d))}); d=addDays(d,7);} }
+  const nameW='230px';
+  let html='<div class="gantt" style="grid-template-columns:'+nameW+' repeat('+cols.length+',minmax('+(scale==='day'?'22px':'54px')+',1fr))">';
+  html+='<div class="gname" style="border-bottom:1px solid var(--grid)"></div>';
+  cols.forEach(c=>{ const isT = m.now>=c.s && m.now<=c.e; html+='<div class="ghead'+(isT?' today':'')+'">'+c.lbl+'</div>'; });
+  all.forEach(sg=>{
+    const st=stageStatus(sg,m);
+    html+='<div class="gname" title="'+sg.n+'">'+sg.n+' <span class="gstage-pct">'+(sg.pr||0)+'%</span></div>';
+    const ss=s2d(sg.s), se=s2d(sg.e);
+    cols.forEach(c=>{
+      const wk = scale==='day' && isWknd(c.s);
+      const isT = m.now>=c.s && m.now<=c.e;
+      const on = se>=c.s && ss<=c.e;
+      let inner='';
+      if(on){
+        const done=Number(sg.pr||0);
+        const cls = done>=100?' done':'';
+        inner='<div class="gbar'+cls+'" title="'+sg.n+': '+dShort(sg.s)+' - '+dShort(sg.e)+', готовность '+done+'%"><i style="width:'+done+'%"></i></div>';
+      }
+      html+='<div class="gcell'+(wk?' wknd':'')+(isT?' today':'')+'">'+inner+'</div>';
+    });
+  });
+  html+='</div>';
+  return html;
+}
+function renderGantt(){ $('#ganttInt').innerHTML=ganttHTML($('#gScale').value,false); renderStageTable(); }
+function renderStageTable(){
+  const m=metrics();
+  let html='<tr><th>Этап</th><th>Начало</th><th>Окончание</th><th>Статус</th><th style="width:180px">Готовность, %</th></tr>';
+  state.stages.forEach((sg,i)=>{
+    const st=stageStatus(sg,m);
+    html+='<tr><td>'+sg.n+'</td><td>'+dShort(sg.s)+'</td><td>'+dShort(sg.e)+'</td><td><span class="tag '+st.c+'">'+st.t+'</span></td>'+
+    '<td><input type="range" min="0" max="100" step="5" value="'+(sg.pr||0)+'" data-si="'+i+'" class="prSlider" style="width:120px;vertical-align:middle"> <span class="gstage-pct">'+(sg.pr||0)+'%</span></td></tr>';
+  });
+  $('#stageTable').innerHTML=html;
+  document.querySelectorAll('.prSlider').forEach(sl=> sl.addEventListener('input', e=>{
+    state.stages[Number(e.target.dataset.si)].pr=Number(e.target.value); save(); renderAll();
+  }));
+}
+/* ==== боевой план ==== */
+let editIdx = null;
+function itemOptions(sel){
+  let h='<option value="">- выберите позицию -</option>';
+  SPEC.forEach(sec=>{ h+='<optgroup label="'+sec.sec+'">';
+    sec.items.forEach(it=>{ h+='<option value="'+it.id+'"'+(sel===it.id?' selected':'')+'>'+it.id+' '+it.n+' ('+it.u+', '+fmt(it.p)+' р.)</option>'; });
+    h+='</optgroup>'; });
+  return h;
+}
+function addLine(id,q){
+  const row=document.createElement('div'); row.className='linerow';
+  row.innerHTML='<select class="lsel field-input" style="border:1px solid var(--ring);background:var(--page);border-radius:8px;padding:6px 8px;font-size:12px">'+itemOptions(id)+'</select>'+
+    '<input type="number" class="lqty" min="0" step="0.5" value="'+(q||'')+'" placeholder="кол-во" style="border:1px solid var(--ring);background:var(--page);border-radius:8px;padding:6px 8px">'+
+    '<span class="sum">0 р.</span><button class="xbtn" title="Удалить">&times;</button>';
+  row.querySelector('.xbtn').onclick=()=>{ row.remove(); updEntryTotal(); };
+  row.querySelector('.lsel').onchange=updEntryTotal;
+  row.querySelector('.lqty').oninput=updEntryTotal;
+  $('#eLines').appendChild(row); updEntryTotal();
+}
+let skipPlanBlock=false;
+function planLinesFor(date){
+  const agg={};
+  LOG().filter(e=>e.type==='plan' && e.date===date).forEach(e=>e.lines.forEach(l=>{ agg[l.id]=(agg[l.id]||0)+Number(l.q||0); }));
+  return agg;
+}
+function renderFromPlan(){
+  const box=$('#eFromPlan'); if(!box) return;
+  if($('#eType').value!=='fact' || skipPlanBlock){ box.innerHTML=''; updEntryTotal(); return; }
+  const date=$('#eDate').value;
+  const agg=planLinesFor(date);
+  const ids=Object.keys(agg).filter(id=>ITEMS[id]);
+  if(!ids.length){
+    box.innerHTML='<div class="planbox"><div class="planhint">На '+(date?dLong(date):'выбранную дату')+' плана в журнале нет. Внесите выполненное вручную кнопкой «+ позиция из сметы».</div></div>';
+    updEntryTotal(); return;
+  }
+  let h='<div class="planbox"><div class="planhead"><b>План на '+dLong(date)+'</b><span class="muted">отметьте выполненное, при необходимости поправьте объем</span>'+
+    '<span style="flex:1"></span><button type="button" class="btn small" id="pfAll">Все по плану</button><button type="button" class="btn small" id="pfNone">Снять все</button></div>'+
+    '<table class="pftable"><tr><th style="width:34px"></th><th>Позиция</th><th class="num">План</th><th class="num" style="width:110px">Факт</th><th class="num" style="width:110px">Сумма</th></tr>';
+  ids.forEach(id=>{
+    const it=ITEMS[id];
+    h+='<tr class="off" data-row="'+id+'"><td><input type="checkbox" class="pfchk" data-id="'+id+'"></td>'+
+       '<td>'+it.n+'</td><td class="num">'+fmtQ(agg[id])+' '+it.u+'</td>'+
+       '<td class="num"><input type="number" class="pfq" data-id="'+id+'" data-plan="'+agg[id]+'" min="0" step="0.5" value="'+agg[id]+'"></td>'+
+       '<td class="num pfsum" data-sum="'+id+'">-</td></tr>';
+  });
+  h+='</table></div>';
+  box.innerHTML=h;
+  document.querySelectorAll('.pfchk').forEach(ch=>ch.addEventListener('change', updEntryTotal));
+  document.querySelectorAll('.pfq').forEach(i=>i.addEventListener('input', ()=>{
+    const ch=document.querySelector('.pfchk[data-id="'+i.dataset.id+'"]');
+    if(ch && !ch.checked && Number(i.value||0)>0 && Number(i.value)!==Number(i.dataset.plan)) ch.checked=true;
+    updEntryTotal();
+  }));
+  $('#pfAll').onclick=()=>{ document.querySelectorAll('.pfchk').forEach(ch=>ch.checked=true);
+    document.querySelectorAll('.pfq').forEach(i=>i.value=i.dataset.plan); updEntryTotal(); };
+  $('#pfNone').onclick=()=>{ document.querySelectorAll('.pfchk').forEach(ch=>ch.checked=false); updEntryTotal(); };
+  updEntryTotal();
+}
+function readPlanChecked(){
+  return [...document.querySelectorAll('.pfchk')].filter(ch=>ch.checked).map(ch=>{
+    const inp=document.querySelector('.pfq[data-id="'+ch.dataset.id+'"]');
+    return {id:ch.dataset.id, q:Number(inp?inp.value:0)||0};
+  }).filter(l=>l.q>0);
+}
+function readManualLines(){
+  return [...document.querySelectorAll('#eLines .linerow')].map(r=>({id:r.querySelector('.lsel').value, q:Number(r.querySelector('.lqty').value||0)})).filter(l=>l.id && l.q>0);
+}
+function readLines(){
+  const merged={};
+  readPlanChecked().concat(readManualLines()).forEach(l=>{ merged[l.id]=(merged[l.id]||0)+l.q; });
+  return Object.keys(merged).map(id=>({id, q:merged[id]}));
+}
+function updEntryTotal(){
+  let t=0;
+  document.querySelectorAll('#eLines .linerow').forEach(r=>{
+    const id=r.querySelector('.lsel').value, q=Number(r.querySelector('.lqty').value||0);
+    const s=ITEMS[id]? ITEMS[id].p*q : 0; t+=s;
+    r.querySelector('.sum').textContent=fmtR(s);
+  });
+  document.querySelectorAll('.pfchk').forEach(ch=>{
+    const id=ch.dataset.id, inp=document.querySelector('.pfq[data-id="'+id+'"]');
+    const q=Number(inp?inp.value:0)||0, on=ch.checked;
+    const s=(on && ITEMS[id])? ITEMS[id].p*q : 0; t+=s;
+    const cell=document.querySelector('.pfsum[data-sum="'+id+'"]'); if(cell) cell.textContent = on? fmtR(s) : '-';
+    const row=document.querySelector('tr[data-row="'+id+'"]'); if(row) row.classList.toggle('off', !on);
+  });
+  let txt='Выработка по записи: '+fmtR(t);
+  if($('#eType').value==='fact' && !skipPlanBlock){
+    const agg=planLinesFor($('#eDate').value);
+    let ps=0; Object.keys(agg).forEach(id=>{ if(ITEMS[id]) ps+=ITEMS[id].p*agg[id]; });
+    if(ps>0) txt+=' | план дня: '+fmtR(ps)+' ('+pct(t,ps).toFixed(0)+'%)';
+  }
+  $('#eTotal').textContent=txt;
+}
+function saveEntry(){
+  const lines=readLines();
+  if(!$('#eDate').value){ alert('Укажите дату'); return; }
+  if(!lines.length){ alert('Отметьте выполненные позиции плана или добавьте позицию вручную'); return; }
+  const entry={ type:$('#eType').value, date:$('#eDate').value, chd:Number($('#eChd').value||0), note:$('#eNote').value.trim(), lines, ts:Date.now(), by:(state.settings.userName||'') };
+  if(editIdx!==null){ state.log[editIdx]=entry; editIdx=null; skipPlanBlock=false; $('#cancelEditBtn').style.display='none'; $('#entryFormTitle').textContent='Новая запись'; }
+  else state.log.push(entry);
+  state.log.sort((a,b)=> a.date<b.date?-1:1);
+  save(); resetForm(); renderAll();
+}
+function defaultEntryDate(){
+  const d=new Date(); d.setHours(0,0,0,0);
+  if($('#eType').value==='fact'){ d.setDate(d.getDate()-1); while(isWknd(d)) d.setDate(d.getDate()-1); }
+  else { d.setDate(d.getDate()+1); while(isWknd(d)) d.setDate(d.getDate()+1); }
+  return d2s(d);
+}
+function resetForm(){
+  $('#eLines').innerHTML=''; $('#eNote').value=''; $('#eChd').value='';
+  skipPlanBlock=false;
+  $('#eDate').value=defaultEntryDate();
+  renderFromPlan();
+  if(!document.querySelector('.pfchk')) addLine();
+  updEntryTotal();
+}
+function renderLog(){
+  if(!LOG().length){ $('#logList').innerHTML='<p class="muted">Журнал пуст. Добавьте план на завтра или факт за сегодня.</p>'; return; }
+  const byDate={};
+  state.log.forEach((e,i)=>{ if(e.deleted) return; (byDate[e.date]=byDate[e.date]||[]).push({e,i}); });
+  let html='';
+  Object.keys(byDate).sort().reverse().forEach(d=>{
+    const entries=byDate[d];
+    const plan=entries.filter(x=>x.e.type==='plan'), fact=entries.filter(x=>x.e.type==='fact');
+    const ps=plan.reduce((s,x)=>s+entrySum(x.e),0), fs=fact.reduce((s,x)=>s+entrySum(x.e),0);
+    let cmp='';
+    if(plan.length&&fact.length){ const p=pct(fs,ps);
+      const cls=p>=95?'ok':(p>=70?'warn':'crit');
+      cmp=' <span class="tag '+cls+'">выполнение плана дня: '+p.toFixed(0)+'%</span>'; }
+    html+='<div style="margin:14px 0 6px; font-weight:650">'+dLong(d)+cmp+'</div>';
+    entries.forEach(({e,i})=>{
+      const t=entrySum(e);
+      html+='<div class="logentry"><div class="lhead"><span class="tag '+(e.type==='fact'?'ok':'plan')+'">'+(e.type==='fact'?'ФАКТ':'ПЛАН')+'</span><b>'+fmtR(t)+'</b>'+(e.chd?'<span class="muted">'+e.chd+' ч/д</span>':'')+
+      '<span style="flex:1"></span><button class="btn small" data-ed="'+i+'">Изменить</button><button class="btn small danger" data-del="'+i+'">Удалить</button></div><ul>'+
+      e.lines.map(l=>{ const it=ITEMS[l.id]; return '<li>'+(it?it.n:l.id)+' - '+l.q+' '+(it?it.u:'')+' ('+fmtR(it?it.p*l.q:0)+')</li>'; }).join('')+'</ul>'+
+      (e.note?'<div class="lsum">Комментарий: '+e.note+'</div>':'')+'</div>';
+    });
+  });
+  $('#logList').innerHTML=html;
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(confirm('Удалить запись?')){ const en=state.log[Number(b.dataset.del)]; en.deleted=true; en.ts=Date.now(); save(); renderAll(); }});
+  document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{
+    const e=state.log[Number(b.dataset.ed)]; editIdx=Number(b.dataset.ed);
+    $('#eType').value=e.type; $('#eDate').value=e.date; $('#eChd').value=e.chd||''; $('#eNote').value=e.note||'';
+    skipPlanBlock=true; renderFromPlan();
+    $('#eLines').innerHTML=''; e.lines.forEach(l=>addLine(l.id,l.q));
+    $('#entryFormTitle').textContent='Редактирование записи от '+dLong(e.date); $('#cancelEditBtn').style.display='inline-block';
+    document.querySelector('[data-tab="daily"]').click(); window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+/* ==== смета боевого плана ==== */
+function renderBpTable(){
+  let h='<tr><th>№</th><th>Позиция</th><th>Ед.</th><th class="num">План всего</th><th class="num">Факт</th><th class="num">Остаток</th><th style="width:110px">На день</th></tr>';
+  const fm=factByItem();
+  SPEC.forEach(sec=>{
+    h+='<tr class="section"><td colspan="7">'+sec.sec+'</td></tr>';
+    sec.items.forEach(it=>{
+      const fq=fm[it.id]||0, rest=Math.max(0,it.q-fq);
+      h+='<tr><td class="muted">'+it.id+'</td><td>'+it.n+'</td><td>'+it.u+'</td><td class="num">'+fmt(it.q)+'</td><td class="num">'+fmt(fq)+'</td><td class="num">'+fmt(rest)+'</td>'+
+      '<td><input type="number" min="0" step="0.5" class="bpq" data-bp="'+it.id+'" style="width:90px;border:1px solid var(--ring);background:var(--page);border-radius:6px;padding:4px 6px"></td></tr>';
+    });
+  });
+  const tb=$('#bpTable'); if(tb){ tb.innerHTML=h;
+    document.querySelectorAll('.bpq').forEach(i=>i.addEventListener('input', updBpTotal)); }
+}
+function updBpTotal(){
+  let t=0,n=0;
+  document.querySelectorAll('.bpq').forEach(i=>{ const q=Number(i.value||0); if(q>0){ n++; t+=q*(ITEMS[i.dataset.bp]?ITEMS[i.dataset.bp].p:0);} });
+  $('#bpTotal').textContent = n? ('Позиций: '+n+' | Плановая выработка: '+fmtR(t)) : '';
+}
+function bpForm(){
+  const date=$('#bpDate').value;
+  if(!date){ alert('Укажите дату плана'); return; }
+  const lines=[];
+  document.querySelectorAll('.bpq').forEach(i=>{ const q=Number(i.value||0); if(q>0) lines.push({id:i.dataset.bp, q}); });
+  if(!lines.length){ alert('Впишите объемы хотя бы по одной позиции'); return; }
+  let chd=Number($('#bpChd').value||0);
+  if(!chd) chd=Math.round(state.settings.totalChd/state.settings.workDays*2)/2;
+  const note=$('#bpNote').value.trim();
+  const idx=state.log.findIndex(e=>e.type==='plan' && e.date===date && !e.deleted);
+  const entry={type:'plan', date, chd, note, lines, ts:Date.now(), by:(state.settings.userName||'')};
+  if(idx>=0){ if(confirm('План на '+dLong(date)+' уже есть в журнале. Заменить?')) state.log[idx]=entry; else return; }
+  else state.log.push(entry);
+  state.log.sort((a,b)=> a.date<b.date?-1:1);
+  save(); renderAll();
+  const txt=tgText('planCrew', date);
+  $('#bpOut').value=txt; $('#bpOut').style.display='block'; $('#bpCopyBtn').style.display='inline-block';
+  document.querySelectorAll('.bpq').forEach(i=>i.value='');
+  updBpTotal();
+}
+/* ==== ТГ генератор ==== */
+function tgText(kind, date){
+  const m=metrics();
+  const dayEntries=t=>LOG().filter(e=>e.date===date && e.type===t);
+  if(kind==='planCrew'){
+    const plans=dayEntries('plan');
+    if(!plans.length) return 'На '+dLong(date)+' план в журнале не найден. Сначала внесите план на вкладке "Боевой план".';
+    let t='ПЛАН РАБОТ НА '+dLong(date).toUpperCase()+'\nОбъект: Транссервис, Пушкино (М8 Холмогоры, км 31)\nПомещения 180 и 198, ТСТ-1\n\nЗадачи:\n';
+    let n=1;
+    plans.forEach(e=>e.lines.forEach(l=>{ const it=ITEMS[l.id]; t+=(n++)+'. '+(it?it.n:l.id)+' - '+l.q+' '+(it?it.u:'')+'\n'; }));
+    const chd=plans.reduce((s,e)=>s+Number(e.chd||0),0);
+    if(chd) t+='\nСостав: '+chd+' чел.\n';
+    const notes=plans.map(e=>e.note).filter(Boolean).join('; ');
+    if(notes) t+='Важно: '+notes+'\n';
+    t+='\nНапоминания по объекту:\n- пропуска и список персонала - за 3 раб. дня до выхода\n- спецодежда обязательна, длинный рукав и штаны\n- курение только в отведенных местах (штраф заказчика 100 000 р.)\n- уборка рабочих мест в конце смены (требование договора)\n- фотофиксация выполненных работ - обязательно';
+    return t;
+  }
+  if(kind==='factInt'){
+    const facts=dayEntries('fact');
+    if(!facts.length) return 'На '+dLong(date)+' факт в журнале не найден.';
+    const fs=facts.reduce((s,e)=>s+entrySum(e),0);
+    const plans=dayEntries('plan'); const ps=plans.reduce((s,e)=>s+entrySum(e),0);
+    let t='ИТОГ ДНЯ '+dLong(date)+' - ТРАНССЕРВИС\n\nВыполнено:\n';
+    facts.forEach(e=>e.lines.forEach(l=>{ const it=ITEMS[l.id]; t+='- '+(it?it.n:l.id)+' - '+l.q+' '+(it?it.u:'')+' ('+fmtR(it?it.p*l.q:0)+')\n'; }));
+    t+='\nВыработка за день: '+fmtR(fs);
+    if(ps>0) t+=' (план дня: '+fmtR(ps)+', выполнение '+pct(fs,ps).toFixed(0)+'%)';
+    const chd=facts.reduce((s,e)=>s+Number(e.chd||0),0);
+    if(chd) t+='\nЧ/д за день: '+chd+' (выработка на человека: '+fmtR(fs/chd)+')';
+    t+='\n\nПО ПРОЕКТУ ИТОГО:\nФакт: '+fmtR(m.fact)+' из '+fmtR(state.settings.totalPlan)+' ('+pct(m.fact,state.settings.totalPlan).toFixed(1)+'%)\nПлан на дату: '+fmtR(m.planToDate)+'\nОтклонение: '+(m.dev>=0?'+':'')+fmtR(m.dev)+' ('+m.devPct.toFixed(1)+'%)';
+    const rl=riskLevel(m);
+    if(rl==='crit') t+='\n\nВНИМАНИЕ: отставание более 20% - договорной риск (п. 4.2.4). Нужно решение по усилению.';
+    else if(rl==='warn') t+='\n\nВнимание: отставание более 10%, следим за темпом.';
+    t+='\nДо финиша по внутреннему плану: '+m.leftCal+' к.д. (срок '+dLong(d2s(m.intDeadline))+')';
+    const notes=facts.map(e=>e.note).filter(Boolean).join('; ');
+    if(notes) t+='\n\nПроблемы/заметки: '+notes;
+    return t;
+  }
+  /* clientWeek */
+  const total=state.stages.reduce((s,x)=>s+Number(x.pr||0),0)/state.stages.length;
+  let t='СТАТУС РАБОТ ПО ОБЪЕКТУ\nАО ТСТ "Транссервис", реконструкция системы кондиционирования (договор № 04238/26)\nПо состоянию на '+dLong(date)+'\n\nОбщая готовность: '+total.toFixed(0)+'%\n\nЭтапы:\n';
+  state.stages.forEach(sg=>{
+    const st=stageStatus(sg,metrics());
+    t+='- '+sg.n+' ('+dShort(sg.s)+'-'+dShort(sg.e)+'): '+(sg.pr||0)+'% - '+st.t.toLowerCase()+'\n';
+  });
+  t+='\nРаботы идут в соответствии с согласованным графиком. Плановое завершение: '+dLong(d2s(metrics().deadline))+'.\n\nС уважением,\nООО "Климэйт"';
+  return t;
+}
+
+/* ==== командная синхронизация (Google Apps Script) ==== */
+function docFromState(){
+  return { updatedAt: state.updatedAt||Date.now(), settings: state.settings, stages: state.stages, log: state.log };
+}
+function mergeDocs(local, remote){
+  if(!remote) return local;
+  const newer = (Number(remote.updatedAt)||0) > (Number(local.updatedAt)||0) ? remote : local;
+  const out = { settings: Object.assign({}, DEFAULTS.settings, newer.settings||{}),
+                stages: (newer.stages && newer.stages.length) ? newer.stages : (local.stages||[]),
+                log: [], updatedAt: Math.max(Number(local.updatedAt)||0, Number(remote.updatedAt)||0) };
+  const map={};
+  (local.log||[]).concat(remote.log||[]).forEach(e=>{
+    const k=e.type+'|'+e.date;
+    if(!map[k] || (Number(e.ts)||0) >= (Number(map[k].ts)||0)) map[k]=e;
+  });
+  out.log = Object.keys(map).map(k=>map[k]).sort((a,b)=> a.date<b.date?-1:1);
+  /* параметры подключения - всегда локальные */
+  out.settings.syncUrl=state.settings.syncUrl; out.settings.syncKey=state.settings.syncKey; out.settings.userName=state.settings.userName;
+  return out;
+}
+function buildView(){
+  const m=metrics();
+  const stages=state.stages.map(s=>[s.n, dLong(s.s), dLong(s.e), Number(s.pr||0)]);
+  const journal=[];
+  LOG().slice().sort((a,b)=> a.date<b.date?-1:1).forEach(e=>e.lines.forEach(l=>{
+    const it=ITEMS[l.id];
+    journal.push([dLong(e.date), e.type==='fact'?'ФАКТ':'ПЛАН', (it?it.n:l.id), l.q, (it?it.u:''), (it? it.p*l.q : 0), e.by||'', e.note||'']);
+  }));
+  const totalPr = state.stages.length ? state.stages.reduce((s,x)=>s+Number(x.pr||0),0)/state.stages.length : 0;
+  const totals=[
+    ['Обновлено', dLong(todayStr())],
+    ['Начало работ', dLong(state.settings.workStart||state.settings.advance)],
+    ['Финиш по внутреннему плану', dLong(d2s(m.intDeadline))],
+    ['Осталось, к.д.', m.leftCal],
+    ['План выработки всего, р.', state.settings.totalPlan],
+    ['План на дату, р.', Math.round(m.planToDate)],
+    ['Факт выработки, р.', Math.round(m.fact)],
+    ['Отклонение, р.', Math.round(m.dev)],
+    ['Отклонение, %', Math.round(m.devPct*10)/10],
+    ['Человеко-дни факт', m.chdFact],
+    ['Человеко-дни план', m.chdPlanTotal],
+    ['Общая готовность, %', Math.round(totalPr)]
+  ];
+  return {stages, journal, totals};
+}
+const SYNC = {
+  timer:null, pulling:false, lastPull:0,
+  cfg(){ const s=state.settings||{}; return {url:(s.syncUrl||'').trim(), key:(s.syncKey||'').trim()}; },
+  on(){ return !!this.cfg().url; },
+  status(txt, cls){ const el=$('#syncPill'); if(el){ el.textContent=txt; el.className='pill sync-'+(cls||'off'); } },
+  info(txt){ const el=$('#syncInfo'); if(el) el.textContent=txt||''; },
+  time(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); },
+  async pull(silent){
+    const c=this.cfg(); if(!c.url){ this.status('Локальный режим','off'); return null; }
+    this.status('Обновление...','wait');
+    try{
+      const r=await fetch(c.url+'?key='+encodeURIComponent(c.key)+'&t='+Date.now());
+      const j=await r.json();
+      if(!j.ok) throw new Error(j.error||'сервер отклонил запрос');
+      this.lastPull=Date.now();
+      return j.doc||null;
+    }catch(e){
+      this.status('Нет связи','err');
+      if(!silent) alert('Не удалось получить данные с сервера: '+e.message);
+      return null;
+    }
+  },
+  async push(){
+    const c=this.cfg(); if(!c.url) return false;
+    this.status('Сохранение...','wait');
+    try{
+      const remote=await this.pull(true);
+      const merged=mergeDocs(docFromState(), remote);
+      state.settings=merged.settings; state.stages=merged.stages; state.log=merged.log; state.updatedAt=Date.now();
+      saveLocal();
+      const payload={ key:c.key, doc:docFromState(), view:buildView() };
+      const r=await fetch(c.url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
+      const j=await r.json();
+      if(!j.ok) throw new Error(j.error||'сервер отклонил запись');
+      this.status('Синхронизировано '+this.time(),'ok');
+      return true;
+    }catch(e){ this.status('Не сохранено на сервере','err'); return false; }
+  },
+  schedule(){
+    if(!this.on()){ this.status('Локальный режим','off'); return; }
+    clearTimeout(this.timer);
+    this.status('Есть несохраненные изменения','wait');
+    this.timer=setTimeout(()=>this.push(), 1500);
+  },
+  async refresh(silent){
+    if(!this.on()){ this.status('Локальный режим','off'); return; }
+    if(this.pulling) return; this.pulling=true;
+    const remote=await this.pull(silent);
+    if(remote){
+      const merged=mergeDocs(docFromState(), remote);
+      state.settings=merged.settings; state.stages=merged.stages; state.log=merged.log; state.updatedAt=merged.updatedAt;
+      saveLocal(); renderSettings(); renderAll(); refreshEntryForm();
+      this.status('Синхронизировано '+this.time(),'ok');
+    }
+    this.pulling=false;
+  }
+};
+/* ==== настройки ==== */
+function renderSettings(){
+  const st=state.settings;
+  $('#sAdvance').value=st.advance; $('#sWorkStart').value=st.workStart||st.advance;
+  $('#sSyncUrl').value=st.syncUrl||''; $('#sSyncKey').value=st.syncKey||''; $('#sUserName').value=st.userName||''; $('#sDays').value=st.days; $('#sIntDays').value=st.internalDays||53; $('#sWorkDays').value=st.workDays;
+  $('#sTotal').value=st.totalPlan; $('#sChd').value=st.totalChd;
+  let html='<tr><th>Этап</th><th>Начало</th><th>Окончание</th></tr>';
+  state.stages.forEach((sg,i)=>{
+    html+='<tr><td>'+sg.n+'</td><td><input type="date" value="'+sg.s+'" data-ss="'+i+'" style="border:1px solid var(--ring);border-radius:6px;padding:4px;background:var(--page)"></td>'+
+    '<td><input type="date" value="'+sg.e+'" data-se="'+i+'" style="border:1px solid var(--ring);border-radius:6px;padding:4px;background:var(--page)"></td></tr>';
+  });
+  $('#stageEdit').innerHTML=html;
+  document.querySelectorAll('[data-ss]').forEach(inp=>inp.onchange=e=>{ state.stages[Number(e.target.dataset.ss)].s=e.target.value; save(); renderAll(); });
+  document.querySelectorAll('[data-se]').forEach(inp=>inp.onchange=e=>{ state.stages[Number(e.target.dataset.se)].e=e.target.value; save(); renderAll(); });
+}
+
+/* ==== общий рендер и события ==== */
+function renderAll(){ renderTop(); renderDash(); renderSmeta(); renderGantt(); renderLog(); renderBpTable(); }
+function refreshEntryForm(){ if($('#eFromPlan')) renderFromPlan(); }
+function init(){
+  load();
+  $('#tabs').addEventListener('click', e=>{
+    if(e.target.dataset.tab===undefined) return;
+    document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    document.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('active'));
+    $('#tab-'+e.target.dataset.tab).classList.add('active');
+  });
+  $('#themeBtn').onclick=()=>{
+    const cur=document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+  };
+  if(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme','dark');
+  $('#addLineBtn').onclick=()=>addLine();
+  $('#eType').onchange=()=>{ if(editIdx===null){ $('#eDate').value=defaultEntryDate(); $('#eLines').innerHTML=''; } renderFromPlan(); if($('#eType').value!=='fact' && !document.querySelector('#eLines .linerow')) addLine(); updEntryTotal(); };
+  $('#eDate').onchange=()=>{ renderFromPlan(); };
+  const tm=new Date(); tm.setDate(tm.getDate()+1);
+  $('#bpDate').value=d2s(tm);
+  $('#bpFormBtn').onclick=bpForm;
+  $('#bpCopyBtn').onclick=()=>{ navigator.clipboard.writeText($('#bpOut').value).then(()=>{ $('#bpCopyBtn').textContent='Скопировано!'; setTimeout(()=>$('#bpCopyBtn').textContent='Скопировать текст для ТГ',1500); }); };
+  $('#saveEntryBtn').onclick=saveEntry;
+  $('#cancelEditBtn').onclick=()=>{ editIdx=null; skipPlanBlock=false; $('#cancelEditBtn').style.display='none'; $('#entryFormTitle').textContent='Новая запись'; resetForm(); };
+  $('#gScale').onchange=renderGantt;
+  $('#tgDate').value=todayStr();
+  $('#tgGen').onclick=()=>{ $('#tgOut').value=tgText($('#tgKind').value, $('#tgDate').value); };
+  $('#tgCopy').onclick=()=>{ navigator.clipboard.writeText($('#tgOut').value).then(()=>{ $('#tgCopy').textContent='Скопировано!'; setTimeout(()=>$('#tgCopy').textContent='Скопировать',1500); }); };
+  $('#saveSet').onclick=()=>{
+    state.settings=Object.assign({}, state.settings, { advance:$('#sAdvance').value, workStart:$('#sWorkStart').value, days:Number($('#sDays').value), internalDays:Number($('#sIntDays').value), workDays:Number($('#sWorkDays').value), totalPlan:Number($('#sTotal').value), totalChd:Number($('#sChd').value) });
+    save(); renderAll(); alert('Параметры сохранены');
+  };
+  $('#expClientBtn').onclick=()=>{
+    const m=metrics();
+    const data={ updated: todayStr(), advance: state.settings.advance, days: state.settings.days,
+      stages: state.stages.map(s=>({n:s.n, s:s.s, e:s.e, pr:Number(s.pr||0)})) };
+    const blob=new Blob(['window.CLIENT_DATA = '+JSON.stringify(data,null,1)+';'],{type:'text/javascript'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='client-data.js'; a.click();
+  };
+  $('#expBtn').onclick=()=>{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='transservice_erp_'+todayStr()+'.json'; a.click();
+  };
+  $('#impFile').onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ const sv=JSON.parse(r.result); state=Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS)), sv); const keep={syncUrl:state.settings.syncUrl,syncKey:state.settings.syncKey,userName:state.settings.userName};
+      state.settings=Object.assign({}, DEFAULTS.settings, sv.settings||{}, keep); save(); renderSettings(); renderAll(); alert('Данные импортированы'); }catch(err){ alert('Ошибка файла: '+err.message); } };
+    r.readAsText(f);
+  };
+  $('#wipeBtn').onclick=()=>{ if(confirm('Стереть все данные (журнал, прогресс, настройки)?')){ state=JSON.parse(JSON.stringify(DEFAULTS)); save(); renderSettings(); resetForm(); renderAll(); } };
+  $('#syncBtn').onclick=()=>SYNC.refresh(false);
+  $('#syncSaveBtn').onclick=async()=>{
+    state.settings.syncUrl=$('#sSyncUrl').value.trim();
+    state.settings.syncKey=$('#sSyncKey').value.trim();
+    state.settings.userName=$('#sUserName').value.trim();
+    saveLocal();
+    if(!SYNC.on()){ SYNC.status('Локальный режим','off'); SYNC.info('Адрес не указан - работаем только на этом устройстве.'); return; }
+    SYNC.info('Проверяем связь...');
+    const ok=await SYNC.push();
+    SYNC.info(ok? 'Подключено. Данные отправлены на сервер.' : 'Не удалось подключиться - проверьте адрес и ключ.');
+    if(ok) await SYNC.refresh(true);
+  };
+  $('#syncPullBtn').onclick=()=>SYNC.refresh(false);
+  $('#syncPushBtn').onclick=async()=>{ const ok=await SYNC.push(); SYNC.info(ok?'Отправлено на сервер.':'Ошибка отправки.'); };
+  window.addEventListener('focus', ()=>{ if(SYNC.on() && Date.now()-SYNC.lastPull>20000) SYNC.refresh(true); });
+  renderSettings(); resetForm(); renderAll();
+  if(SYNC.on()) SYNC.refresh(true); else SYNC.status('Локальный режим','off');
+}
+init();
+
+</script>
+</body>
+</html>
